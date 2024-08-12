@@ -26,7 +26,7 @@ spike_table_validated<-validate_bg(spike_table)
 spike_table_validated
 
 #remove spikes that contain significant SNPs, that were not imputed
-spike_table_validated_checked<-check_scaffold(spike_table_validated, snps_scaffold)
+spike_table_validated_checked<-check_scaffold(spike_table_validated, snps_scaffold, test_snp_table)
 spike_table_validated_checked
 
 #run the Midrange Filter to keep or discard spikes
