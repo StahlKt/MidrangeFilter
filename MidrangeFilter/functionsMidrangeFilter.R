@@ -154,6 +154,58 @@ validate_bg<-function(spike.table, format.col="FORMAT", best.guess = "BEST_GUESS
 }
 
 
+check_scaffold<-function(spike.table, positions.scaffold, snp.table,threshold.p.significance=5e-8, pvalue.col="P_VALUE", pos.col="POS",
+                         spike.start.col="SPIKE_START", spike.end.col="SPIKE_END", chrom.col="CHROM"){
+  
+  remove_chrom<-!all(chrom.col %in% names(spike.table),chrom.col %in% names(snp.table), chrom.col %in% names(positions.scaffold))
+  if(remove_chrom){
+    print(paste("The column" ,chrom.col,
+                " was not found in all tables. All spikes are treated as they are located on the same chromosome."))
+    
+    
+    list_sig_snps_scaffold<-snp.table[threshold.p.significance>get(pvalue.col), unique(get(pos.col))]
+    list_sig_snps_scaffold<-list_sig_snps_scaffold[list_sig_snps_scaffold %in% positions.scaffold[,get(pos.col)]]
+    
+    
+    to_remove<-spike.table[,between(list_sig_snps_scaffold,
+                                    get(spike.start.col),
+                                    get(spike.end.col)),
+                           by=get(spike.start.col)] [V1==TRUE, unique(get)]
+    
+    
+    return(spike.table[(get(spike.start.col)%in% to_remove)==FALSE])
+  } else{
+    
+    list_sig_snps_scaffold<-snp.table[threshold.p.significance>get(pvalue.col), .(get(pos.col), get(chrom.col))]
+    setnames(list_sig_snps_scaffold, c("V1", "V2"), c(pos.col, chrom.col))
+
+    
+    list_chrom<-spike.table[, unique(get(chrom.col))]
+    to_remove<-data.table()
+    for(i in length(list_chrom)){
+      
+      list_sig_snps_scaffold_chrom<-list_sig_snps_scaffold[get(chrom.col)==list_chrom[i], get(pos.col)]
+      
+      start_cols<-spike.table[get(chrom.col)==list_chrom[i],
+                  between(list_sig_snps_scaffold_chrom,
+                          get(spike.start.col),
+                          get(spike.end.col)),
+                  by=get(spike.start.col)] [V1==TRUE, unique(get)]
+      
+      add_to_remove<-data.table(spike.start.col=start_cols,
+                                chrom.col=list_chrom[i])
+      
+    
+      setnames(add_to_remove, c("spike.start.col", "chrom.col"), c(spike.start.col, chrom.col))
+     
+      to_remove<-rbind(to_remove, add_to_remove)
+   
+    }
+    rows_to_remove<-spike.table[to_remove, which=TRUE, on=c(spike.start.col,chrom.col)]
+
+    return(spike.table[-rows_to_remove])
+  }
+}
 
 midrange_filter<-function(snp.table, spike.table, quality.col, pvalue.col="P_VALUE",
                           pos.col="POS", chrom.col="CHROM", best.guess.type="BEST GUESS ONLY",
