@@ -31,7 +31,7 @@ spike_table_validated_checked
 
 #run the Midrange Filter to keep or discard spikes
 #decisions listed for each SNP
-result<-midrange_filter(test_snp_table, spike_table_validated_checked, quality.col = "BR1_MIN")
+result<-midrange_filter(test_snp_table, spike_table_validated_checked, quality.col = "BR2_MIN")
 result
 #decisions listed for each spike
 result_condensed<-midrange_filter(test_snp_table, spike_table_validated_checked, quality.col = "BR2_MIN", condensed.return.table = TRUE)
