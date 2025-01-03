@@ -4,40 +4,42 @@
 
 
 #the functions are meant to be run one after the other with one disease loci set with the same simulation settings. 
-#if run.nr is needed, then they can be used with sapply, e.g.
-
-#simulation with set1 and low cases, deletion with illumina omni 5
-#run_name_stem<-"set1_lc_o5" 
-#disease_list<-readRDS(file.path(dir_rds, "set1_disease_loci.RDS"))
-#run_seed<-10101010
-
-#sapply(1:length(disease_list), batch_simulations, number.cases.b=333)
-
-#if run.name.stem is needed, use the function directly, such as
-
-#batch_reference_panel(run_name_stem)
 
 
-#simulate data sets with hapgen adn batchtools
+#simulate data sets with hapgen and batchtools
 #run.nr is the index of the specific disease loci and effect sizes specified in disease_list
 #seting flag.small.ref to 1 will reduce the individuals in the reference panel to 5*number.reference instead of 10*number.reference
 #number.cases.b and number.controls.b are number of individuals in the case and control group respectively
 
 #the simulated data set is needed until the association is done
-batch_simulation<-function(run.nr, flag.small.ref=0, 
-                           number.cases.b=1000, number.controls.b=1000, number.reference=1000){
+
+
+
+batch_simulation<-function(run.nr, dir.testdata.basis=dir_chr19_prefix_annotated_hap_legend_original_half1,
+                                              dir.ref.basis=dir_chr19_prefix_annotated_hap_legend_original_half2, flag.small.ref=0, 
+                                              number.cases.b=1000, number.controls.b=1000, number.reference=1000, send.off.directly=1){
   
-  ifelse(flag.small.ref,
-         number_jobs<-1:6,
-         number_jobs<-1:11)
   
-  #specify run_name as signifier
+  if(flag.small.ref){
+    number_jobs<-1:6
+    number_controls<-c(number.controls.b, rep(number.reference, 5))
+    number_cases<-c(number.cases.b, rep(number.reference, 5))
+  }else{
+    number_jobs<-1:11
+    number_controls<-c(number.controls.b, rep(number.reference, 10))
+    number_cases<-c(number.cases.b, rep(number.reference, 10))
+  }
+  
+  
+  
+  
   disease_allels<-disease_list[run.nr]
   run_name<-paste(run_name_stem,
                   run.nr,
                   sep = "_")
   
-  #check for existing data sets
+  
+  
   bol_ref<-file.exists(sapply(c(0,1),get_reference_panel_path,run.name=run_name))
   bol_test<-file.exists(sapply(c(0,1),get_results_imputation_path,run.name=run_name, imputation.flag=0))
   
@@ -49,8 +51,9 @@ batch_simulation<-function(run.nr, flag.small.ref=0,
   
   if(!file.exists(get_registries(run_name)[1])){
     
+ 
     
-    #create registry for each simulation or clear existing registry
+    #create registry for simulation
     reg_simulation <- makeRegistry(
       file.dir = get_registries(run_name)[1],
       make.default = FALSE,
@@ -58,63 +61,44 @@ batch_simulation<-function(run.nr, flag.small.ref=0,
       seed = run_seed
     )
     
-    reg_simulation$cluster.functions = makeClusterFunctionsSlurm(template=".batchtools.SCC.tmpl")
+    reg_simulation$cluster.functions = makeClusterFunctionsSlurm(template=".batchtools.SCC.NEW.tmpl")
   } else{
     
     reg_simulation<-loadRegistry(get_registries(run_name)[1], writeable = TRUE, make.default = FALSE)
-    reg_simulation$cluster.functions = makeClusterFunctionsSlurm(template=".batchtools.SCC.tmpl")
+    reg_simulation$cluster.functions = makeClusterFunctionsSlurm(template=".batchtools.SCC.NEW.tmpl")
     clearRegistry(reg=reg_simulation)
     
   }
   
-  #simulation_wrap is the function that simulates data sets
-  #first is the test data set, the rest is merged to the reference panel in the following functions
-  #reference and test data are based on different parts of the 1000 Genomes Project data set
-
+  #simulation_wrap is the function that simulates data sets, 1:11 tells it to do it 11 times
+  
+  #run.signifier is used as the first part of all data sets involved in one run and should be chosen distinctively
+  #also the run.signifier will be set in the following skripts as well and should be matching the previous jobs of one iteration
+  
   batchMap(
     simulation_wrap,
-    rep.no=number_jobs,
-    number.controls = c(number.controls.b, rep(number.reference,(length(number_jobs)-1))), 
-    number.cases = c(number.cases.b, rep(number.reference,(length(number_jobs)-1))),
-    input.hap.prefix = c(dir_chr19_prefix_annotated_hap_legend_original_half1,
-                         rep(dir_chr19_prefix_annotated_hap_legend_original_half2, (length(number_jobs)-1))),
+    rep.no=number_jobs, 
+    number.controls = number_controls, 
+    number.cases = number_cases,
+    input.hap.prefix = c(dir.testdata.basis,
+                         rep(dir.ref.basis, (length(number_jobs)-1))),
     reg=reg_simulation,
     more.args = list(
       exec.hapgen = dir_exec_hapgen,
       exec.bcftools = dir_exec_bcftools,
       map.impute = dir_map_19_impute,
       string.risk.alleles = disease_allels,
+      
       run.signifier = run_name
     )
   )
   
+
   
-  
-  
-  if(any(bol_test, bol_ref)){
-    if(bol_ref){
-      number_jobs<-1
-    } else{
-      find_cases<-sapply(number_jobs, get_simulation_result_path,
-                         case.flag=1, run.name=run_name)
-      find_controls<-sapply(number_jobs, get_simulation_result_path,
-                            case.flag=0, run.name=run_name)
-      
-      cases_simulated<-which(!file.exists(find_cases))
-      controls_simulated<-which(!file.exists(find_controls))
-      
-      number_jobs<-unique(c(cases_simulated, controls_simulated))
-      
-      
-    }
-    
-  }
-  
-  
-  #submit jobs
+if(send.off.directly){
   invisible(sapply(number_jobs, submit_jobs_wrap, registry=reg_simulation, mem=80000,
-                   wall.time=60, partition.name="medium"))
-  
+                  wall.time=60, partition.name="medium"))
+}
   return()
 }
 
@@ -452,9 +436,8 @@ batch_association_follow_ver2<-function(run.nr){
 #gathers characteristics such as MAF and imputation quality measures
 #tables with characteristics of significant SNPs are saved as RDS files
 #as the reference panel, one registry for the whole setting.
-batch_char_no_chunks_ver4_one_job<-function(run.name.stem, number.runs=length(disease_list)){
-  
-  
+batch_char_one_job<-function(run.name.stem,
+                             number.runs=length(disease_list), send.off.directly=1){
   
   reg_char <- makeRegistry(
     file.dir = get_registries(run.name.stem)[5], 
@@ -463,30 +446,39 @@ batch_char_no_chunks_ver4_one_job<-function(run.name.stem, number.runs=length(di
   )
   
   
-  reg_char$cluster.functions = makeClusterFunctionsSlurm(template=".batchtools.SCC.tmpl")
+  reg_char$cluster.functions = makeClusterFunctionsSlurm(template=".batchtools.SCC.NEW.tmpl")
   
-  #run function to get characteristics table
+  #define function to get registries
   ids_char<-batchMap(function(run.name.stem, number.runs){
-    sapply(1:number.runs,
-           chartable_no_chunks_one_job, 
-           run.name.stem=run.name.stem)
-    },
-    run.name.stem=run.name.stem,
-    number.runs=number.runs,
-    reg=reg_char
+    
+    significant_runs<-unlist(lapply(1:number.runs,function(x){
+      
+      pv_table<-readRDS(file.path(dir_out_association, paste0(run.name.stem, "_",x,"_pv.RDS")))
+      #list_pos as all SNPs that are genomewide significant
+      list_pos<-pv_table[(FORMAT=="DOSAGE" | FORMAT=="BEST_GUESS") & P_VALUE<5*10^(-8),unique(POS)]
+      
+      if(length(list_pos)==0){
+        print(paste("No genome-wide significant SNPs in imputed data in run" , x))
+        return(NULL)
+      } else{
+        return(x)
+      }
+      
+    }))
+    
+    sapply(significant_runs, chartable_spikes_impq_one_job, run.name.stem=run.name.stem)
+  }, run.name.stem=run.name.stem, number.runs=number.runs,
+  reg=reg_char
   )
-  
-  
-  #send off jobs
-  invisible(sapply(ids_char$job.id, submit_jobs_wrap, registry=reg_char, mem=80000,
-                   wall.time=120, partition.name="medium"))
+
+  if(send.off.directly){
+    invisible(sapply(ids_char$job.id, submit_jobs_wrap, registry=reg_char, mem=80000,
+                   wall.time=60, partition.name="medium"))
+  }
   
   return()
   
 }
-
-
-
 
 
 
