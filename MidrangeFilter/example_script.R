@@ -1,7 +1,7 @@
 #load data.table package
 library(data.table)
 
-
+#Please set the working directory and/or edit the paths to the files and scripts to fit your set-up
 
 # source the script with the functions
 source("functionsMidrangeFilter.R")
