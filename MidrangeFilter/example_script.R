@@ -1,3 +1,7 @@
+#example script of running the functions for the Midrange Filter
+#for specifics on the input parameter for each function, 
+#please see the comments in functionsMidrangeFilter.R
+
 #load data.table package
 library(data.table)
 
@@ -33,7 +37,7 @@ spike_table
 
 #check best guess spikes to determine in which case they fall into:
 #are they present in dosage as well or ar they specific to best guess
-spike_table_validated<-validate_bg(spike_table)
+spike_table_validated<-validate_best_guess_spikes(spike_table)
 #this new table has an extra column that specifies the type of spike
 spike_table_validated
 
@@ -42,7 +46,12 @@ spike_table_validated
 spike_table_validated_checked<-check_scaffold(spike_table_validated, snps_scaffold, imputed_snps)
 spike_table_validated_checked
 
-#run the Midrange Filter to keep or discard spikes:
+#see spikes, which contain typed SNPs, which are not discarded by the MidrangeFilter as a default.
+spikes_typed<-check_scaffold(spike_table_validated, snps_scaffold, imputed_snps,remove.typed.spikes=FALSE)
+spikes_typed
+
+
+#run the Midrange Filter to keep or discard imputed spikes:
 
 #decisions listed for each SNP
 result<-midrange_filter(imputed_snps, spike_table_validated_checked, quality.col = "BR2_MIN")
