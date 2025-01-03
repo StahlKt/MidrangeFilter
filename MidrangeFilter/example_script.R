@@ -7,7 +7,6 @@ library(data.table)
 source("functionsMidrangeFilter.R")
 
 #and load the data sets in the example file folder:
-
 #this is a data table with imputed SNPs
 imputed_snps<-readRDS("example_data/imputed_snps.RDS")
 #check properties
@@ -21,6 +20,9 @@ snps_scaffold<-readRDS("example_data/snps_scaffold.RDS")
 names(snps_scaffold)
 summary(snps_scaffold)
 
+
+#there is an additional file in the example_data folder which reveals the association results,
+#if the data set was completely sequenced and not imputed. This is added for comparison. 
 
 #determine the spikes in the data set with the determine_spikes function from the other script.
 #the example files have names matching the functions expectation,
@@ -49,3 +51,4 @@ result
 #decisions listed for each spike
 result_condensed<-midrange_filter(imputed_snps, spike_table_validated_checked, quality.col = "BR2_MIN", condensed.return.table = TRUE)
 result_condensed
+
