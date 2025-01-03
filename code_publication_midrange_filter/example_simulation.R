@@ -1,6 +1,9 @@
 #example on how to run the simulation with the functions specified 
 #in full_simulation_applyable.R and the functions folder.
 #file_paths.R and configuration files need to be specified to fit the current system
+#each step needs to finish before the next step can be started. The first job of each set 
+#is run separately so that potential error may be caught early without scheduling too many jobs.
+
 run_name_stem<-"set1_ipr_b_o5" 
 disease_list<-readRDS(file.path(dir_rds, "set1_disease_loci.RDS"))
 run_seed<-23102024
