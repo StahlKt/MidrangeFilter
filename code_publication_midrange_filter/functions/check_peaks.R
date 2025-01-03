@@ -222,3 +222,90 @@ get_number_peaks<-function(pos.list){
     }
 }
 
+
+
+chartable_spikes_impq_one_job<-function(run.nr, run.name.stem=run_name_stem){
+  
+  run_name<-paste(run.name.stem,
+                  run.nr,
+                  sep = "_")
+  
+  
+  dir_saved_file_char<-file.path(dir_out_char, paste0(run_name, "_acc_char.RDS"))
+  
+  
+  if(file.exists(dir_saved_file_char)){
+    print(paste(run_name, "characteristics files already exist"))
+    return(NA)
+  }
+  
+  
+   
+  pv_table<-readRDS(file.path(dir_out_association, paste0(run_name, "_pv.RDS")))
+  
+  #list_pos as all SNPs that are genomewide significant
+  list_pos<-pv_table[(FORMAT=="DOSAGE" | FORMAT=="BEST_GUESS") & P_VALUE<5*10^(-8),unique(POS)]
+  
+  if(length(list_pos)==0){
+    print("No genome-wide significant SNPs")
+    return(NULL)
+  }
+  
+  #peak_tables  
+  pv_for_peak<-pv_table[(FORMAT=="DOSAGE" | FORMAT=="BEST_GUESS") & P_VALUE<5*10^(-7)]
+  
+  spike_table<-determine_spikes(pv_for_peak)
+  
+  if("BEST_GUESS" %in% spike_table[, unique(FORMAT)]){
+    spike_table_validated<-validate_bg(spike_table)
+  } else{
+    spike_table_validated<-spike_table
+    }
+  
+  dir_saved_file_peak<-file.path(dir_out_char, paste0(run_name, "_peak.RDS"))
+  
+  saveRDS(spike_table_validated, dir_saved_file_peak)
+  
+  
+  
+  rm(pv_for_peak)
+  rm(spike_table)
+  rm(spike_table_validated)
+  
+  rm(pv_table)
+  #if there's no signal in the run, abort
+  if(length(list_pos)<1){
+    
+    print(paste("No genomewide significant SNPs in run", run_name))
+    return()
+  }
+  
+  #if there are significant snps, then get characteristics
+  if(length(list_pos)>0){
+    
+    region_file_name<-file.path(dir_out_char, paste0(run_name, "_char_regions.text"))
+    #set file to read in
+    
+    set_file<-data.frame(CHROM=19, POS=list_pos)
+    
+    write.table(x=set_file,file=region_file_name, quote=FALSE, sep="\t", row.names = FALSE, col.names = FALSE)
+    
+    
+    
+    
+    
+    
+    get_char_imq_only(dir_exec_bcftools,
+                      dir_exec_python_bashscript, 
+                      region_file_name,
+                      run_name)
+    
+    
+    dir_saved_file_char<-file.path(dir_out_char, paste0(run_name, "_acc_char.RDS"))
+    
+    return(file.exists(dir_saved_file_char))
+    
+    
+  }
+}
+
