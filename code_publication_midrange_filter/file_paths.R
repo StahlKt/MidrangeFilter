@@ -115,6 +115,11 @@ dir_out_magicr<-file.path(dir_output, "magicr")
 function_sources<-list.files(dir_functions, full.names = TRUE)
 sapply(function_sources, source)
 
+dir_gsa<-file.path(dir_project, "PsyCourse", "gsa")
+dir_pc_pheno<-file.path(dir_project, "PsyCourse", "pheno_psycrs6.0.RDS")
+dir_out_pc<-file.path(dir_data, "output_PsyCourse")
+
+
 
 #global variable
 list_chunk_ends_19<-c(1, 17297726, 38851930, 69118783)
