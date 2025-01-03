@@ -153,30 +153,30 @@ run_name_stem<-"set4_b_oe"
 #added in review
     
 run_name_stem<-"set1_ipr_b_o5" 
-disease_list<-readRDS(file.path(dir_rds, "list_grid_pos.RDS"))
+disease_list<-readRDS(file.path(dir_rds, "set1_disease_loci.RDS"))
 run_seed<-23102024
 
 
 run_name_stem<-"set2_ipr_b_o25" 
-disease_list<-readRDS(file.path(dir_rds, "third_pos_disease_list.RDS"))
+disease_list<-readRDS(file.path(dir_rds, "set2_disease_loci.RDS"))
 run_seed<-23102024
 
 
 run_name_stem<-"set1_ipr_b_oe" 
-disease_list<-readRDS(file.path(dir_rds, "list_grid_pos.RDS"))
+disease_list<-readRDS(file.path(dir_rds, "set1_disease_loci.RDS"))
 run_seed<-23102024
 
 
 run_name_stem<-"set4_ipr_b_o5" 
-disease_list<-readRDS(file.path(dir_rds, "several_loci_disease_list.RDS"))
+disease_list<-readRDS(file.path(dir_rds, "set4_disease_loci.RDS"))
 run_seed<-12112024
 
 run_name_stem<-"set3_ipr_b_o5" 
-disease_list<-readRDS(file.path(dir_rds, "list_grid_maf_ef.RDS"))
+disease_list<-readRDS(file.path(dir_rds,"set3_disease_loci.RDS"))
 run_seed<-12112024
 
 run_name_stem<-"set1_ipr_lc_o5" 
-disease_list<-readRDS(file.path(dir_rds, "list_grid_pos.RDS"))
+disease_list<-readRDS(file.path(dir_rds, "set1_disease_loci.RDS"))
 run_seed<-12112024
 
 
