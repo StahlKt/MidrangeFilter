@@ -1,5 +1,5 @@
 # MidrangeFilter
-Implementation of the Midrange filter and code used in the publication "Aggregating SNPs Improves Filtering for False Positive Associations Post-Imputation", currently under Review
+Implementation of the Midrange filter and code used in the publication "Aggregating SNPs Improves Filtering for False Positive Associations Post-Imputation", publication available here: https://academic.oup.com/g3journal/article/15/5/jkaf043/8063643
 
 The folder MidrangeFilter contains an implementation of the new method and an example data set with instructions how to run it.
 
